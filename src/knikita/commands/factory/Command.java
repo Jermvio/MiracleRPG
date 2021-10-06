@@ -69,7 +69,10 @@ public abstract class Command {
         try {
             heroResultSet.next();
             File file = new File("src/resources/knikita/text/" + heroResultSet.getString(6)  +
-                    "/commands/" + this.getClass().getSimpleName() + "/onComplete" + new Random().nextInt(3));
+                    "/commands/" + this.getClass().getSimpleName() + "/onComplete");
+            int quoteIndex = new Random().nextInt(file.list().length);
+            file = new File(file.getAbsolutePath() + "/" + quoteIndex);
+
             BufferedReader reader = new BufferedReader(new FileReader(file));
 
             StringBuilder stringBuilder = new StringBuilder();
@@ -85,12 +88,8 @@ public abstract class Command {
                 stringBuilder.append(" ");
             }
             event.getChannel().sendMessage(stringBuilder.toString()).queue();
-        } catch (SQLException throwables) {
+        } catch (SQLException | IOException throwables) {
             throwables.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
     }
