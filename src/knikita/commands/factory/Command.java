@@ -31,9 +31,9 @@ public abstract class Command {
 
     public abstract void commandBody(GuildMessageReceivedEvent event);
 
-    public void go(GuildMessageReceivedEvent event) {
+    public void go(GuildMessageReceivedEvent event, String[] commandAttributes) {
         itemsMap = new TreeMap<>();
-
+        
         if (isCoolDownPast(event)) {
             commandBody(event);
             setOnCoolDown(event);

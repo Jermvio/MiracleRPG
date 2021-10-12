@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 public class Chop extends Command {
     @Override
     public long getCoolDownTime() {
-        return 1;
+        return TimeUnit.MINUTES.toMillis(20);
     }
 
     @Override

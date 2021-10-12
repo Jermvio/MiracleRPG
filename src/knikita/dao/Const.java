@@ -25,4 +25,10 @@ public interface Const {
     public static final String COMMANDS_USER_ID = "hero";
     public static final String COMMAND_NAME = "command";
     public static final String COMMAND_COOLDOWN = "cooldown_last";
+
+    public static final String EQUIP_TABLE = "equip";
+    public static final String EQUIP_USER_ID = "user_id";
+    public static final String EQUIP_ARMOR_ID = "armor_id";
+    public static final String EQUIP_WEAPON_ID = "weapon_id";
+    public static final String EQUIP_STAFF_ID = "staff_id";
 }

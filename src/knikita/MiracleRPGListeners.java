@@ -34,11 +34,6 @@ public class MiracleRPGListeners extends ListenerAdapter {
             throwables.printStackTrace();
         }
 
-        Command.makeCommand(message[0]).go(event);
-    }
-
-
-    public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
-
+        Command.makeCommand(message[0]).go(event, message);
     }
 }

@@ -10,10 +10,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import java.awt.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Bag extends Command {
     TreeMap<Integer, Integer> itemsCountMap;
@@ -48,32 +45,70 @@ public class Bag extends Command {
 
     @Override
     public void sendFinishMessageSuccess(GuildMessageReceivedEvent event, TreeMap<Integer, Integer> receivedItems) {
-        DatabaseHandler dbHandler = new DatabaseHandler();
-
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.setColor(new Color(95, 63, 0, 168));
 
-        embedBuilder.setTitle("**Инвентарь**");
-
-        Set<Integer> keySet = itemsCountMap.keySet();
-
         try {
-            for (int itemId : keySet) {
-                ResultSet itemResultSet = dbHandler.getItemById(itemId);
+            String inventoryString = getInventoryString();
+            embedBuilder.addField("**Инвентарь**", inventoryString, false);
 
-                itemResultSet.next();
-                String itemName = itemResultSet.getString(2);
-                long itemEmojiId = itemResultSet.getLong(6);
+            String equipString = getEquipString(event);
+            embedBuilder.addField("**Снаряжение**", equipString, false);
 
-                embedBuilder.addField(Emoji.fromEmote(itemName, itemEmojiId, false).getAsMention() + " " +
-                                itemName + ": " +
-                                itemsCountMap.get(itemId),
-                        "", false);
-                embedBuilder.setAuthor(event.getAuthor().getName(), event.getAuthor().getAvatarUrl(), event.getAuthor().getAvatarUrl());
-            }
+            embedBuilder.setAuthor(event.getAuthor().getName(), event.getAuthor().getAvatarUrl(), event.getAuthor().getAvatarUrl());
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
         event.getChannel().sendMessageEmbeds(embedBuilder.build()).queue();
+    }
+
+    private String getEquipString(GuildMessageReceivedEvent event) {
+        DatabaseHandler dbHandler = new DatabaseHandler();
+        StringBuilder string = new StringBuilder();
+        ResultSet equipResultSet = dbHandler.getEquip(event.getAuthor());
+
+        try {
+            equipResultSet.next();
+            ResultSet itemResultSet = dbHandler.getItemById(equipResultSet.getInt(3));
+            itemResultSet.next();
+            String armor_name = itemResultSet.getString(2);
+            Emoji armor_emoji = Emoji.fromEmote(armor_name, itemResultSet.getLong(6), false);
+
+            itemResultSet = dbHandler.getItemById(equipResultSet.getInt(4));
+            itemResultSet.next();
+            String weapon_name = itemResultSet.getString(2);
+            Emoji weapon_emoji = Emoji.fromEmote(armor_name, itemResultSet.getLong(6), false);
+
+            itemResultSet = dbHandler.getItemById(equipResultSet.getInt(5));
+            itemResultSet.next();
+            String staff_name = itemResultSet.getString(2);
+            Emoji staff_emoji = Emoji.fromEmote(armor_name, itemResultSet.getLong(6), false);
+
+            string.append(armor_emoji.getAsMention()).append(armor_name).append("\n").append(weapon_emoji.getAsMention()).append(weapon_name).append("\n").append(staff_emoji.getAsMention()).append(staff_name);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return string.toString();
+    }
+
+    private String getInventoryString() throws SQLException {
+        DatabaseHandler dbHandler = new DatabaseHandler();
+        StringBuilder string = new StringBuilder();
+        Set<Integer> keySet = itemsCountMap.keySet();
+
+        for (int itemId : keySet) {
+            ResultSet itemResultSet = dbHandler.getItemById(itemId);
+
+            itemResultSet.next();
+            String itemName = itemResultSet.getString(2);
+            long itemEmojiId = itemResultSet.getLong(6);
+
+            string.append(Emoji.fromEmote(itemName, itemEmojiId, false).getAsMention())
+                    .append(" ").append(itemName)
+                    .append(": ").append(itemsCountMap.get(itemId))
+                    .append(" \n");
+        }
+
+        return string.toString();
     }
 }

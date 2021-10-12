@@ -26,10 +26,8 @@ public class DatabaseHandler extends Config {
             prSt.setLong(1, user.getIdLong());
 
             prSt.executeUpdate();
-        } catch (SQLException throwables) {
+        } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
     }
 
@@ -43,10 +41,8 @@ public class DatabaseHandler extends Config {
             prSt.setLong(1, user.getIdLong());
 
             resultSet = prSt.executeQuery();
-        } catch (SQLException throwables) {
+        } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
 
         return resultSet;
@@ -62,10 +58,8 @@ public class DatabaseHandler extends Config {
             prSt.setInt(2, itemId);
 
             prSt.executeUpdate();
-        } catch (SQLException throwables) {
+        } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
     }
 
@@ -79,10 +73,8 @@ public class DatabaseHandler extends Config {
             prSt.setLong(1, user.getIdLong());
 
             resultSet = prSt.executeQuery();
-        } catch (SQLException throwables) {
+        } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
 
         return resultSet;
@@ -98,10 +90,8 @@ public class DatabaseHandler extends Config {
             prSt.setInt(1, itemID);
 
             resultSet = prSt.executeQuery();
-        } catch (SQLException throwables) {
+        } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
 
         return resultSet;
@@ -117,10 +107,8 @@ public class DatabaseHandler extends Config {
             prSt.setString(2, commandName);
             prSt.setLong(3, coolDownLastTime);
             prSt.executeUpdate();
-        } catch (SQLException throwables) {
+        } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
     }
 
@@ -134,15 +122,13 @@ public class DatabaseHandler extends Config {
             prSt.setLong(2, user.getIdLong());
             prSt.setString(3, commandName);
             prSt.executeUpdate();
-        } catch (SQLException throwables) {
+        } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
     }
 
     public long getCommandLastUse(User user, String commandName) {
-        ResultSet resultSet = null;
+        ResultSet resultSet;
         long result = -1;
 
         String query = "SELECT * FROM " + Const.COMMANDS_TABLE + " WHERE " + Const.COMMANDS_USER_ID + " =?" +
@@ -159,12 +145,52 @@ public class DatabaseHandler extends Config {
             if (resultSet.next()) {
                 result = resultSet.getLong(3);
             }
-        } catch (SQLException throwables) {
+        } catch (SQLException | ClassNotFoundException throwables) {
             throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
 
         return result;
+    }
+
+    public void setEquipPart(User user, int equip_id) {
+        String query = "INSERT INTO " + Const.EQUIP_TABLE + "(" + Const.EQUIP_USER_ID + "," + getEquipPartName(equip_id) + ")" +
+                "VALUES(?,?)";
+
+        try {
+            PreparedStatement prSt = getDbConnection().prepareStatement(query);
+
+            prSt.setLong(1, user.getIdLong());
+            prSt.setInt(2, equip_id);
+            prSt.executeUpdate();
+        } catch (SQLException | ClassNotFoundException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    private String getEquipPartName(int equip_id) {
+        ResultSet itemResultSet = getItemById(equip_id);
+        try {
+            itemResultSet.next();
+            return itemResultSet.getString(7) + "_id";
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return null;
+    }
+
+    public ResultSet getEquip(User user) {
+        ResultSet resultSet = null;
+        String query = "SELECT * FROM " + Const.EQUIP_TABLE + " WHERE " + Const.EQUIP_USER_ID + " =?";
+
+        try {
+            PreparedStatement prSt = getDbConnection().prepareStatement(query);
+
+            prSt.setLong(1, user.getIdLong());
+            resultSet = prSt.executeQuery();
+        } catch (SQLException | ClassNotFoundException throwables) {
+            throwables.printStackTrace();
+        }
+
+        return resultSet;
     }
 }
