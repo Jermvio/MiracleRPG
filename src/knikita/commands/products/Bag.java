@@ -2,6 +2,9 @@ package knikita.commands.products;
 
 import knikita.commands.factory.Command;
 import knikita.dao.DatabaseHandler;
+import knikita.model.equip;
+import knikita.model.inventory;
+import knikita.model.items;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -24,7 +27,10 @@ public class Bag extends Command {
     public void commandBody(GuildMessageReceivedEvent event) {
         DatabaseHandler dbHandler = new DatabaseHandler();
         itemsCountMap = new TreeMap<>(); //TODO звучит здоров но непонятно
-        ResultSet resultSet = dbHandler.getHeroItemsId(event.getAuthor());
+
+        inventory inv = new inventory();
+        inv.setUser_id(event.getAuthor().getIdLong());
+        ResultSet resultSet = dbHandler.selectFromTable(inv);
 
         try {
 
@@ -65,21 +71,29 @@ public class Bag extends Command {
     private String getEquipString(GuildMessageReceivedEvent event) {
         DatabaseHandler dbHandler = new DatabaseHandler();
         StringBuilder string = new StringBuilder();
-        ResultSet equipResultSet = dbHandler.getEquip(event.getAuthor());
 
-        try {
+        equip eq = new equip();
+        eq.setUser_id(event.getAuthor().getIdLong());
+        ResultSet equipResultSet = dbHandler.selectFromTable(eq);
+
+        try { //TODO Дикая херня
+            items item = new items();
+
+            item.setItem_id(equipResultSet.getInt(3));
             equipResultSet.next();
-            ResultSet itemResultSet = dbHandler.getItemById(equipResultSet.getInt(3));
+            ResultSet itemResultSet = dbHandler.selectFromTable(item);
             itemResultSet.next();
             String armor_name = itemResultSet.getString(2);
             Emoji armor_emoji = Emoji.fromEmote(armor_name, itemResultSet.getLong(6), false);
 
-            itemResultSet = dbHandler.getItemById(equipResultSet.getInt(4));
+            item.setItem_id(equipResultSet.getInt(4));
+            itemResultSet = dbHandler.selectFromTable(item);
             itemResultSet.next();
             String weapon_name = itemResultSet.getString(2);
             Emoji weapon_emoji = Emoji.fromEmote(armor_name, itemResultSet.getLong(6), false);
 
-            itemResultSet = dbHandler.getItemById(equipResultSet.getInt(5));
+            item.setItem_id(equipResultSet.getInt(5));
+            itemResultSet = dbHandler.selectFromTable(item);
             itemResultSet.next();
             String staff_name = itemResultSet.getString(2);
             Emoji staff_emoji = Emoji.fromEmote(armor_name, itemResultSet.getLong(6), false);
@@ -97,7 +111,9 @@ public class Bag extends Command {
         Set<Integer> keySet = itemsCountMap.keySet();
 
         for (int itemId : keySet) {
-            ResultSet itemResultSet = dbHandler.getItemById(itemId);
+            items item = new items();
+            item.setItem_id(itemId);
+            ResultSet itemResultSet = dbHandler.selectFromTable(item);
 
             itemResultSet.next();
             String itemName = itemResultSet.getString(2);

@@ -1,7 +1,9 @@
 package knikita.dao;
 
+import java.lang.reflect.Field;
 import java.sql.*;
 
+import knikita.model.Model;
 import net.dv8tion.jda.api.entities.User;
 
 public class DatabaseHandler extends Config {
@@ -16,6 +18,110 @@ public class DatabaseHandler extends Config {
         dbConnection = DriverManager.getConnection(connectionString, dbUser, dbPass);
 
         return dbConnection;
+    }
+
+    public void insertIntoTable(Model model) {
+        try {
+            PreparedStatement preparedStatement = getDbConnection().prepareStatement(getInsertQueryForModel(model));
+
+            Field[] fields = model.getClass().getDeclaredFields();
+            for (int i = 0; i < fields.length; i++) {
+
+                if (String.class.equals(fields[i].getType())) {
+                    preparedStatement.setString(i + 1, (String) fields[i].get(model));
+                }
+                if (int.class.equals(fields[i].getType())) {
+                    preparedStatement.setInt(i + 1, (Integer) fields[i].get(model));
+                }
+                if (long.class.equals(fields[i].getType())) {
+                    preparedStatement.setLong(i + 1, (Long) fields[i].get(model));
+                }
+                if (boolean.class.equals(fields[i].getType())) {
+                    preparedStatement.setBoolean(i + 1, (Boolean) fields[i].get(model));
+                }
+            }
+
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getInsertQueryForModel(Model model) {
+        StringBuilder query = new StringBuilder();
+        query.append("INSERT INTO ");
+        query.append(model.getClass().getSimpleName());
+        query.append("(");
+        for (String fieldName : model.getFieldNames()) {
+            query.append(fieldName).append(",");
+        }
+        query.deleteCharAt(query.length() - 1);
+        query.append(") VALUES(");
+        query.append("?,".repeat(model.getFieldsCount()));
+        query.deleteCharAt(query.length() - 1);
+        query.append(")");
+        return query.toString();
+    }
+
+    public ResultSet selectFromTable(Model model) {
+
+        ResultSet resultSet = null;
+        try {
+            PreparedStatement preparedStatement = getDbConnection().prepareStatement(getSelectQueryForModel(model));
+
+            int counter = 1;
+            for (Field field : model.getClass().getDeclaredFields()) {
+
+                if (!model.fieldNotNull(field.getName()))
+                    continue;
+
+                if (String.class.equals(field.getType())) {
+                    preparedStatement.setString(counter, (String) field.get(model));
+                }
+                if (int.class.equals(field.getType())) {
+                    preparedStatement.setInt(counter, (Integer) field.get(model));
+                }
+                if (long.class.equals(field.getType())) {
+                    preparedStatement.setLong(counter, (Long) field.get(model));
+                }
+                if (boolean.class.equals(field.getType())) {
+                    preparedStatement.setBoolean(counter, (Boolean) field.get(model));
+                }
+                counter++;
+            }
+            resultSet = preparedStatement.executeQuery();
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return resultSet;
+    }
+
+    private String getSelectQueryForModel(Model model) {
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT * FROM ");
+        query.append(model.getClass().getSimpleName());
+        query.append(" WHERE ");
+
+        for (String fieldName : model.getFieldNames()) {
+            if (model.fieldNotNull(fieldName)) {
+                query.append(fieldName).append(" =? AND ");
+            }
+
+        }
+
+        query.delete(query.length() - 5, query.length() - 1);
+        return query.toString();
     }
 
     public void addHero(User user) {
@@ -35,38 +141,6 @@ public class DatabaseHandler extends Config {
         ResultSet resultSet = null;
 
         String query = "SELECT * FROM " + Const.HEROES_TABLE + " WHERE " + Const.USER_ID + "=?";
-
-        try {
-            PreparedStatement prSt = getDbConnection().prepareStatement(query);
-            prSt.setLong(1, user.getIdLong());
-
-            resultSet = prSt.executeQuery();
-        } catch (SQLException | ClassNotFoundException throwables) {
-            throwables.printStackTrace();
-        }
-
-        return resultSet;
-    }
-
-    public void addItem(User owner, int itemId) {
-
-        String query = "INSERT INTO " + Const.INVENTORY_TABLE + "(" + Const.USER_ID + "," + Const.ITEM_ID + ")" + "VALUES(?,?)";
-
-        try {
-            PreparedStatement prSt = getDbConnection().prepareStatement(query);
-            prSt.setLong(1, owner.getIdLong());
-            prSt.setInt(2, itemId);
-
-            prSt.executeUpdate();
-        } catch (SQLException | ClassNotFoundException throwables) {
-            throwables.printStackTrace();
-        }
-    }
-
-    public ResultSet getHeroItemsId(User user) {
-        ResultSet resultSet = null;
-
-        String query = "SELECT * FROM " + Const.INVENTORY_TABLE + " WHERE " + Const.USER_ID + "=?";
 
         try {
             PreparedStatement prSt = getDbConnection().prepareStatement(query);
@@ -152,21 +226,6 @@ public class DatabaseHandler extends Config {
         return result;
     }
 
-    public void setEquipPart(User user, int equip_id) {
-        String query = "INSERT INTO " + Const.EQUIP_TABLE + "(" + Const.EQUIP_USER_ID + "," + getEquipPartName(equip_id) + ")" +
-                "VALUES(?,?)";
-
-        try {
-            PreparedStatement prSt = getDbConnection().prepareStatement(query);
-
-            prSt.setLong(1, user.getIdLong());
-            prSt.setInt(2, equip_id);
-            prSt.executeUpdate();
-        } catch (SQLException | ClassNotFoundException throwables) {
-            throwables.printStackTrace();
-        }
-    }
-
     private String getEquipPartName(int equip_id) {
         ResultSet itemResultSet = getItemById(equip_id);
         try {
@@ -176,21 +235,5 @@ public class DatabaseHandler extends Config {
             throwables.printStackTrace();
         }
         return null;
-    }
-
-    public ResultSet getEquip(User user) {
-        ResultSet resultSet = null;
-        String query = "SELECT * FROM " + Const.EQUIP_TABLE + " WHERE " + Const.EQUIP_USER_ID + " =?";
-
-        try {
-            PreparedStatement prSt = getDbConnection().prepareStatement(query);
-
-            prSt.setLong(1, user.getIdLong());
-            resultSet = prSt.executeQuery();
-        } catch (SQLException | ClassNotFoundException throwables) {
-            throwables.printStackTrace();
-        }
-
-        return resultSet;
     }
 }
