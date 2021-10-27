@@ -24,10 +24,12 @@ public class users extends Model {
     }
 
     public users() {
+        super();
     }
 
-    public void setUser_id(long user_id) {
+    public users setUser_id(long user_id) {
         this.user_id = user_id;
+        return this;
     }
 
     public void setClas(String clas) {

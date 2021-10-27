@@ -7,14 +7,17 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import java.awt.*;
 import java.util.TreeMap;
 
-public class Help extends Command {
+public class Buy extends Command {
     @Override
-    public long getCoolDownTime() { //TODO Д стоить поставить, нагрузка на чат
+    public long getCoolDownTime() {
         return 0;
     }
 
     @Override
     public void commandBody(GuildMessageReceivedEvent event, String[] commandAttributes) {
+        // - Забрать монеты
+        // - Дать предмет если монеты есть
+        // - Не дать если монет нету
 
     }
 

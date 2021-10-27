@@ -14,7 +14,7 @@ public class Daily extends Command {
     }
 
     @Override
-    public void commandBody(GuildMessageReceivedEvent event) {
+    public void commandBody(GuildMessageReceivedEvent event, String[] commandAttributes) {
         DatabaseHandler dbHandler = new DatabaseHandler();
         dbHandler.insertIntoTable(new inventory(event.getAuthor().getIdLong(), 1));
         dbHandler.insertIntoTable(new inventory(event.getAuthor().getIdLong(), 1));
@@ -22,5 +22,7 @@ public class Daily extends Command {
         dbHandler.insertIntoTable(new inventory(event.getAuthor().getIdLong(), 2));
         dbHandler.insertIntoTable(new inventory(event.getAuthor().getIdLong(), 2));
         dbHandler.insertIntoTable(new inventory(event.getAuthor().getIdLong(), 2));
+        itemsMap.put(2,3);
+        itemsMap.put(1,3);
     }
 }

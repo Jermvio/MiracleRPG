@@ -2,6 +2,7 @@ package knikita;
 
 import knikita.commands.factory.Command;
 import knikita.dao.DatabaseHandler;
+import knikita.model.users;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -26,9 +27,9 @@ public class MiracleRPGListeners extends ListenerAdapter {
         message[0] = message[0].substring(1);
 
         try {
-            ResultSet resultSet = dbHandler.getHero(event.getAuthor());
+            ResultSet resultSet = dbHandler.selectFromTable(new users().setUser_id(event.getAuthor().getIdLong()));
             if (!resultSet.next()) {
-                dbHandler.addHero(event.getAuthor());
+                dbHandler.insertIntoTable(new users(event.getAuthor().getIdLong()));
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();

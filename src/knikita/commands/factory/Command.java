@@ -1,6 +1,9 @@
 package knikita.commands.factory;
 
 import knikita.dao.DatabaseHandler;
+import knikita.model.commands_cooldowns;
+import knikita.model.items;
+import knikita.model.users;
 import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
@@ -29,13 +32,13 @@ public abstract class Command {
 
     public abstract long getCoolDownTime();
 
-    public abstract void commandBody(GuildMessageReceivedEvent event);
+    public abstract void commandBody(GuildMessageReceivedEvent event, String[] commandAttributes);
 
     public void go(GuildMessageReceivedEvent event, String[] commandAttributes) {
         itemsMap = new TreeMap<>();
         
         if (isCoolDownPast(event)) {
-            commandBody(event);
+            commandBody(event, commandAttributes);
             setOnCoolDown(event);
             sendFinishMessageSuccess(event, itemsMap);
         } else {
@@ -50,8 +53,8 @@ public abstract class Command {
             dbHandler.updateCommandCoolDown(event.getAuthor(), this.getClass().getName(),
                     System.currentTimeMillis() + this.getCoolDownTime());
         } else {
-            dbHandler.setCommandCoolDown(event.getAuthor(), this.getClass().getName(),
-                    System.currentTimeMillis() + this.getCoolDownTime());
+            dbHandler.insertIntoTable(new commands_cooldowns(event.getAuthor().getIdLong(), this.getClass().getName(),
+                    System.currentTimeMillis() + this.getCoolDownTime()));
         }
     }
 
@@ -63,7 +66,7 @@ public abstract class Command {
 
     public void sendFinishMessageSuccess(GuildMessageReceivedEvent event, TreeMap<Integer, Integer> receivedItems) {
         DatabaseHandler dbHandler = new DatabaseHandler();
-        ResultSet heroResultSet = dbHandler.getHero(event.getAuthor());
+        ResultSet heroResultSet = dbHandler.selectFromTable(new users().setUser_id(event.getAuthor().getIdLong()));
         Set<Integer> keySet = receivedItems.keySet();
 
         try {
@@ -79,13 +82,14 @@ public abstract class Command {
             stringBuilder.append(reader.readLine()).append(" ");
 
             for (int itemId : keySet) {
-                ResultSet itemResultSet = dbHandler.getItemById(itemId);
-                itemResultSet.next();
-                stringBuilder.append(Emoji.fromEmote(itemResultSet.getString(2), itemResultSet.getLong(6), false).getAsMention());
-                stringBuilder.append(itemResultSet.getString(2));
-                stringBuilder.append(" x");
-                stringBuilder.append(receivedItems.get(itemId));
-                stringBuilder.append(" ");
+                ResultSet itemResultSet = dbHandler.selectFromTable(new items().setItem_id(itemId));
+                if (itemResultSet.next()) {
+                    stringBuilder.append(Emoji.fromEmote(itemResultSet.getString(2), itemResultSet.getLong(6), false).getAsMention());
+                    stringBuilder.append(itemResultSet.getString(2));
+                    stringBuilder.append(" x");
+                    stringBuilder.append(receivedItems.get(itemId));
+                    stringBuilder.append(" ");
+                }
             }
             event.getChannel().sendMessage(stringBuilder.toString()).queue();
         } catch (SQLException | IOException throwables) {

@@ -24,7 +24,7 @@ public class Bag extends Command {
     }
 
     @Override
-    public void commandBody(GuildMessageReceivedEvent event) {
+    public void commandBody(GuildMessageReceivedEvent event, String[] commandAttributes) {
         DatabaseHandler dbHandler = new DatabaseHandler();
         itemsCountMap = new TreeMap<>(); //TODO звучит здоров но непонятно
 
@@ -77,10 +77,10 @@ public class Bag extends Command {
         ResultSet equipResultSet = dbHandler.selectFromTable(eq);
 
         try { //TODO Дикая херня
+            equipResultSet.next();
             items item = new items();
 
             item.setItem_id(equipResultSet.getInt(3));
-            equipResultSet.next();
             ResultSet itemResultSet = dbHandler.selectFromTable(item);
             itemResultSet.next();
             String armor_name = itemResultSet.getString(2);

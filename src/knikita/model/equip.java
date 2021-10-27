@@ -10,9 +10,11 @@ public class equip extends Model {
     public int staff_id;
 
     public equip() {
+        super();
     }
 
     public equip(long user_id, int armor_id, int weapon_id, int staff_id) {
+        super();
         this.user_id = user_id;
         this.armor_id = armor_id;
         this.weapon_id = weapon_id;

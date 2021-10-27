@@ -12,11 +12,11 @@ import java.util.concurrent.TimeUnit;
 public class Chop extends Command {
     @Override
     public long getCoolDownTime() {
-        return TimeUnit.MINUTES.toMillis(20);
+        return 1;
     }
 
     @Override
-    public void commandBody(GuildMessageReceivedEvent event) {
+    public void commandBody(GuildMessageReceivedEvent event, String[] commandAttributes) {
         DatabaseHandler dbHandler = new DatabaseHandler();
         dbHandler.insertIntoTable(new inventory(event.getAuthor().getIdLong(), 2));
         itemsMap.put(2,2);

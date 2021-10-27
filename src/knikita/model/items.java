@@ -18,9 +18,11 @@ public class items extends Model {
     public int defence;
 
     public items() {
+        super();
     }
 
     public items(int item_id, String name, int durability, boolean usable, int damage, long emoji_id, String type, int defence) {
+        super();
         this.item_id = item_id;
         this.name = name;
         this.durability = durability;
@@ -31,8 +33,9 @@ public class items extends Model {
         this.defence = defence;
     }
 
-    public void setItem_id(int item_id) {
+    public items setItem_id(int item_id) {
         this.item_id = item_id;
+        return this;
     }
 
     public void setName(String name) {

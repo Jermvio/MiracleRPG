@@ -6,9 +6,11 @@ public class inventory extends Model {
     public int item_id;
 
     public inventory() {
+        super();
     }
 
     public inventory(long user_id, int item_id) {
+        super();
         this.user_id = user_id;
         this.item_id = item_id;
     }

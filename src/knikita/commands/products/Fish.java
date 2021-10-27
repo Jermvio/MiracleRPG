@@ -10,11 +10,11 @@ import java.util.concurrent.TimeUnit;
 public class Fish extends Command {
     @Override
     public long getCoolDownTime() {
-        return TimeUnit.MINUTES.toMillis(20);
+        return 1;
     }
 
     @Override
-    public void commandBody(GuildMessageReceivedEvent event) {
+    public void commandBody(GuildMessageReceivedEvent event, String[] commandAttributes) {
         DatabaseHandler dbHandler = new DatabaseHandler();
         dbHandler.insertIntoTable(new inventory(event.getAuthor().getIdLong(), 1));
         itemsMap.put(1, 1);
