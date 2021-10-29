@@ -1,7 +1,9 @@
 package knikita.dao;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
+import java.util.ArrayList;
 
 import knikita.model.Model;
 import knikita.model.items;
@@ -61,7 +63,8 @@ public class DatabaseHandler extends Config {
         return query.toString();
     }
 
-    public ResultSet selectFromTable(Model model) {
+    public ArrayList<Model> selectFromTable(Model model) {
+        ArrayList<Model> resultList = new ArrayList<>();
 
         ResultSet resultSet = null;
         try {
@@ -70,14 +73,40 @@ public class DatabaseHandler extends Config {
             setPreparedStatements(model, preparedStatement);
             resultSet = preparedStatement.executeQuery();
 
+            while(resultSet.next()) {
+                Model element = (Model) Class.forName(model.getClass().getName()).getDeclaredConstructor().newInstance();
+                for (Field field : element.getClass().getDeclaredFields()) {
+                    if (String.class.equals(field.getType())) {
+                        field.set(element, resultSet.getString(field.getName()));
+                    }
+                    if (int.class.equals(field.getType())) {
+                        field.set(element, resultSet.getInt(field.getName()));
+                    }
+                    if (long.class.equals(field.getType())) {
+                        field.set(element, resultSet.getLong(field.getName()));
+                    }
+                    if (boolean.class.equals(field.getType())) {
+                        field.set(element, resultSet.getBoolean(field.getName()));
+                    }
+                }
+                resultList.add(element);
+
+            }
+
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
         }
-        return resultSet;
+        return resultList;
     }
 
     private void setPreparedStatements(Model model, PreparedStatement preparedStatement) throws SQLException, IllegalAccessException {
